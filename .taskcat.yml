@@ -1,0 +1,11 @@
+project:
+  name: kendra
+  regions:
+  - us-west-2
+tests:
+  default:
+    template: ./templates/my-template.yaml
+    regions:
+    - us-west-2
+    parameters:
+      
