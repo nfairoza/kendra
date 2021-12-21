@@ -1,0 +1,84 @@
+  
+Parameters:
+ KendraEdition:
+    Type: String
+    Default: 'DEVELOPER_EDITION'
+    AllowedValues:
+      - 'DEVELOPER_EDITION' 
+      - 'ENTERPRISE_EDITION'
+    Description: DEVELOPER_EDITION or ENTERPRISE_EDITION
+
+Resources:
+  
+  KendraIndexRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: kendra.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    'cloudwatch:namespace': 'Kendra'
+                Action:
+                  - 'cloudwatch:PutMetricData'
+              - Effect: Allow
+                Resource: '*'
+                Action: 'logs:DescribeLogGroups'
+              - Effect: Allow
+                Resource: !Sub
+                  - 'arn:aws:logs:${region}:${account}:log-group:/aws/kendra/*'
+                  - region: !Ref 'AWS::Region'
+                    account: !Ref 'AWS::AccountId'
+                Action: 'logs:CreateLogGroup'
+              - Effect: Allow
+                Resource: !Sub
+                  - 'arn:aws:logs:${region}:${account}:log-group:/aws/kendra/*:log-stream:*'
+                  - region: !Ref 'AWS::Region'
+                    account: !Ref 'AWS::AccountId'
+                Action: 
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+          PolicyName: KendraIndexPolicy
+
+  KendraIndex:
+    Type: 'AWS::Kendra::Index'
+    Properties:
+      Edition: !ref KendraEdition
+      Name: !Join
+        - ''
+        - - !Ref 'AWS::StackName'
+          - '-Index'
+      RoleArn: !GetAtt KendraIndexRole.Arn
+
+
+  ##Attach Custom Data Source
+  KendraMediaDS:
+    Type: 'AWS::Kendra::DataSource'
+    Properties: 
+      IndexId: !If [CreateIndex, !GetAtt MediaKendraIndex.Id, !Ref ExistingIndexId]
+      Name: !Join
+        - ''
+        - - !Ref 'AWS::StackName'
+          - '-DS'
+      Type: 'CUSTOM'
+  
+  
+
+    
+Outputs:
+  KendraIndexId:
+    Value: !If [CreateIndex, !GetAtt MediaKendraIndex.Id, !Ref ExistingIndexId]
+  MediaBucketUsed:
+    Value: !Ref MediaBucket

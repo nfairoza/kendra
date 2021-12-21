@@ -1,0 +1,2 @@
+virtualenv -p /usr/bin/python3 vpy36
+source vpy36/bin/activate
