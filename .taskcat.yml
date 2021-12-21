@@ -4,7 +4,7 @@ project:
   - us-west-2
 tests:
   default:
-    template: ./templates/my-template.yaml
+    template: ./templates/kendra.yaml
     regions:
     - us-west-2
     parameters:
