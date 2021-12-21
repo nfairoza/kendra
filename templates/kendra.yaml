@@ -25,20 +25,17 @@ Parameters:
     Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
 
 Conditions:
-  indexexists: !Not 
-      - !Equals 
+  indexnotexists: !Equals 
         - !Ref ExistingKendraIndex
         - ''
   s3bucketexists: !Not 
       - !Equals 
         - !Ref DatasourceS3bucketName
         - ''
-  indexroleexists: !Not 
-      - !Equals 
+  indexrolenotexists: !Equals 
         - !Ref ExistingKendraIndexRole
         - ''
-  s3dsroleexists: !Not 
-      - !Equals 
+  s3dsrolenotexists: !Equals 
         - !Ref ExistingKendraS3DatasourceRole
         - ''
     
@@ -49,6 +46,7 @@ Conditions:
 Resources:
   KendraIndexRole:
     Type: 'AWS::IAM::Role'
+    condition: indexrolenotexists
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -89,8 +87,9 @@ Resources:
                   - 'logs:PutLogEvents'
           PolicyName: KendraIndexPolicy
   KendraS3DatasourceRole:
-    DependsOn: KendraIndex
+    DependsOn: s3dsrolenotexists
     Type: 'AWS::IAM::Role'
+    condition: ExistingKendraS3DatasourceRole
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -116,6 +115,7 @@ Resources:
                 Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/{KendraIndex}'
           PolicyName: KendraIndexS3DatasourcePolicy
   KendraIndex:
+    condition: indexnotexists
     Type: 'AWS::Kendra::Index'
     Properties:
       Edition: !Ref KendraEdition
@@ -123,16 +123,26 @@ Resources:
         - ''
         - - !Ref 'AWS::StackName'
           - '-Index'
-      RoleArn: !GetAtt KendraIndexRole.Arn
+      RoleArn: !f
+        indexrolenotexists
+          - !GetAtt KendraIndexRole.Arn
+          - !Ref ExistingKendraIndexRole
+          
   KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
-      IndexId: !Ref KendraIndex
+      IndexId: !f
+        indexrolenotexists
+          - !GetAtt KendraIndexRole.Arn
+          - !Ref ExistingKendraIndex
       Name: !Join
         - ''
         - - !Ref 'AWS::StackName'
           - '-S3Datasource'
-      RoleArn: !GetAtt KendraS3DatasourceRole.Arn #The Amazon Resource Name (ARN) of a role with permission to access the data source
+      RoleArn: !f
+        s3dsrolenotexists
+          - !GetAtt KendraS3DatasourceRole.Arn
+          - !Ref ExistingKendraS3DatasourceRole 
       Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
       # Schedule: '0 * * * *'
       DataSourceConfiguration: 
