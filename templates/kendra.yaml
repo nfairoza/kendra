@@ -1,15 +1,21 @@
   
 Parameters:
- KendraEdition:
+  KendraEdition:
     Type: String
     Default: 'DEVELOPER_EDITION'
     AllowedValues:
       - 'DEVELOPER_EDITION' 
       - 'ENTERPRISE_EDITION'
     Description: DEVELOPER_EDITION or ENTERPRISE_EDITION
-
+  DatasourceS3bucketName:
+    Type: String
+    Default: ''
+    Description: S3 bucket to use as datasource
+    
+#### Create Conditions s3 bucket/RDS
+#### Logic: If using existing role no need to create new one
+    
 Resources:
-  
   KendraIndexRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -51,34 +57,66 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
           PolicyName: KendraIndexPolicy
-
+  KendraS3DatasourceRole:
+    DependsOn: KendraIndex
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: kendra.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                - s3:GetObject
+                - s3:ListBucket
+                Resource:
+                - !Sub 'arn:aws:s3:::{DatasourceS3bucketName}/*'
+                - DatasourceS3bucketName: !Ref DatasourceS3bucketName
+                Effect: Allow
+              - Action:
+                - kendra:BatchPutDocument
+                - kendra:BatchDeleteDocument
+                Effect: Allow
+                Resource: !Sub 'arn:aws:kendra:{AWS::Region}:{AWS::AccountId}:index/{KendraIndex}'
+          PolicyName: KendraIndexS3DatasourcePolicy
   KendraIndex:
     Type: 'AWS::Kendra::Index'
     Properties:
-      Edition: !ref KendraEdition
+      Edition: !Ref KendraEdition
       Name: !Join
         - ''
         - - !Ref 'AWS::StackName'
           - '-Index'
       RoleArn: !GetAtt KendraIndexRole.Arn
-
-
-  ##Attach Custom Data Source
-  KendraMediaDS:
+  KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
-      IndexId: !If [CreateIndex, !GetAtt MediaKendraIndex.Id, !Ref ExistingIndexId]
+      DataSourceConfiguration: 
+        BucketName: !Ref DatasourceS3bucketName
+      IndexId: !Ref KendraIndex
       Name: !Join
         - ''
         - - !Ref 'AWS::StackName'
-          - '-DS'
-      Type: 'CUSTOM'
-  
-  
-
+          - '-S3Datasource'
+      RoleArn: !GetAtt KendraS3DatasourceRole.Arn #The Amazon Resource Name (ARN) of a role with permission to access the data source
+      Schedule: String
+      Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
     
 Outputs:
   KendraIndexId:
-    Value: !If [CreateIndex, !GetAtt MediaKendraIndex.Id, !Ref ExistingIndexId]
-  MediaBucketUsed:
-    Value: !Ref MediaBucket
+    Value: !Ref KendraIndex
+  KendraDatasourceS3:
+    Value: !GetAtt KendraDatasourceS3.Arn
+  KendraIndexRole:
+     Value: !GetAtt KendraIndexRole.Arn
+  KendraS3DatasourceRole:
+   Value: !GetAtt KendraS3DatasourceRole.Arn
+  # S3Bucket
+  

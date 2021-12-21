@@ -8,4 +8,5 @@ tests:
     regions:
     - us-west-2
     parameters:
+      DatasourceS3bucketName: 'fsu-kendratest-noor'
       
