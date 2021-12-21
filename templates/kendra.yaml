@@ -9,11 +9,12 @@ Parameters:
     Description: DEVELOPER_EDITION or ENTERPRISE_EDITION
   DatasourceS3bucketName:
     Type: String
-    Default: ''
+    Default: 'fsu-kendratest-noor'
     Description: S3 bucket to use as datasource
     
 #### Create Conditions s3 bucket/RDS
 #### Logic: If using existing role no need to create new one
+#### Condition: exixting IndexID condition
     
 Resources:
   KendraIndexRole:
@@ -76,15 +77,13 @@ Resources:
               - Action:
                 - s3:GetObject
                 - s3:ListBucket
-                Resource:
-                - !Sub 'arn:aws:s3:::{DatasourceS3bucketName}/*'
-                - DatasourceS3bucketName: !Ref DatasourceS3bucketName
+                Resource: !Sub 'arn:aws:s3:::${DatasourceS3bucketName}/*'
                 Effect: Allow
               - Action:
                 - kendra:BatchPutDocument
                 - kendra:BatchDeleteDocument
                 Effect: Allow
-                Resource: !Sub 'arn:aws:kendra:{AWS::Region}:{AWS::AccountId}:index/{KendraIndex}'
+                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/{KendraIndex}'
           PolicyName: KendraIndexS3DatasourcePolicy
   KendraIndex:
     Type: 'AWS::Kendra::Index'
@@ -98,8 +97,6 @@ Resources:
   KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
-      DataSourceConfiguration: 
-        BucketName: !Ref DatasourceS3bucketName
       IndexId: !Ref KendraIndex
       Name: !Join
         - ''
@@ -108,6 +105,9 @@ Resources:
       RoleArn: !GetAtt KendraS3DatasourceRole.Arn #The Amazon Resource Name (ARN) of a role with permission to access the data source
       Schedule: String
       Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
+      DataSourceConfiguration: 
+        S3Configuration: 
+          BucketName: !Ref DatasourceS3bucketName
     
 Outputs:
   KendraIndexId:
