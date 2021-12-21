@@ -23,6 +23,15 @@ Parameters:
     Type: String
     Default: ''
     Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
+  DatabaseEngineType:
+    Type: String
+    Description: "RDS_AURORA_MYSQL | RDS_AURORA_POSTGRESQL | RDS_MYSQL | RDS_POSTGRESQL"
+    AllowedValues:
+      - 'RDS_AURORA_MYSQL'  
+      - 'RDS_AURORA_POSTGRESQL' 
+      - 'RDS_MYSQL' 
+      - 'RDS_POSTGRESQL'
+
 
 Conditions:
   indexnotexists: !Equals 
@@ -127,7 +136,6 @@ Resources:
         indexrolenotexists
           - !GetAtt KendraIndexRole.Arn
           - !Ref ExistingKendraIndexRole
-          
   KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
@@ -148,7 +156,33 @@ Resources:
       DataSourceConfiguration: 
         S3Configuration: 
           BucketName: !Ref DatasourceS3bucketName
-    
+  KendraDatasourceRDS:
+    Type: 'AWS::Kendra::DataSource'
+    Properties: 
+      IndexId: !f
+        indexrolenotexists
+          - !GetAtt KendraIndexRole.Arn
+          - !Ref ExistingKendraIndex
+      Name: !Join
+        - ''
+        - - !Ref 'AWS::StackName'
+          - '-S3Datasource'
+      RoleArn: !f
+        s3dsrolenotexists
+          - !GetAtt KendraS3DatasourceRole.Arn
+          - !Ref ExistingKendraS3DatasourceRole 
+      Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
+      # Schedule: '0 * * * *'
+      DataSourceConfiguration: 
+        DatabaseConfiguration: 
+            ColumnConfiguration: 
+              ColumnConfiguration
+            ConnectionConfiguration: 
+              ConnectionConfiguration
+            DatabaseEngineType: !Ref DatabaseEngineType  
+            VpcConfiguration: 
+              DataSourceVpcConfiguration
+
 Outputs:
   KendraIndexId:
     Value: !Ref KendraIndex
