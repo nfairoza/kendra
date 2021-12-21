@@ -9,8 +9,38 @@ Parameters:
     Description: DEVELOPER_EDITION or ENTERPRISE_EDITION
   DatasourceS3bucketName:
     Type: String
-    Default: 'fsu-kendratest-noor'
-    Description: S3 bucket to use as datasource
+    Default: ''
+    Description: 'S3 bucket to use as datasource'
+  ExistingKendraIndex:
+    Type: String
+    Default: ''
+    Description: '[Optional] Provide kendra Index Id If you want to add Datasources to existing Kendra Index'
+  ExistingKendraIndexRole:
+    Type: String
+    Default: ''
+    Description: '[Optional] Provide an IAM role Arn that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. If not provided, a new role will be created.'
+  ExistingKendraS3DatasourceRole:
+    Type: String
+    Default: ''
+    Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
+
+Conditions:
+  indexexists: !Not 
+      - !Equals 
+        - !Ref ExistingKendraIndex
+        - ''
+  s3bucketexists: !Not 
+      - !Equals 
+        - !Ref DatasourceS3bucketName
+        - ''
+  indexroleexists: !Not 
+      - !Equals 
+        - !Ref ExistingKendraIndexRole
+        - ''
+  s3dsroleexists: !Not 
+      - !Equals 
+        - !Ref ExistingKendraS3DatasourceRole
+        - ''
     
 #### Create Conditions s3 bucket/RDS
 #### Logic: If using existing role no need to create new one
@@ -103,8 +133,8 @@ Resources:
         - - !Ref 'AWS::StackName'
           - '-S3Datasource'
       RoleArn: !GetAtt KendraS3DatasourceRole.Arn #The Amazon Resource Name (ARN) of a role with permission to access the data source
-      Schedule: String
       Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
+      # Schedule: '0 * * * *'
       DataSourceConfiguration: 
         S3Configuration: 
           BucketName: !Ref DatasourceS3bucketName
