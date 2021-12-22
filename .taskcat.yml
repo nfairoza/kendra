@@ -22,5 +22,5 @@ tests:
       DatabaseName: postgres
       DatabasePort: 5432
       TableName: mlb
-      # SecurityGroupIds:
-      # SubnetIds:
+      SecurityGroupIds: sg-0c3f77617fb1ec675
+      SubnetIds: subnet-06499683749fcc015,subnet-0bb63881543fb0ae3

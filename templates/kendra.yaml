@@ -63,9 +63,11 @@ Parameters:
     Description: "The column that provides the documents unique identifier.This could be same as ChangeDetectingColumns"
   SecurityGroupIds:
     Type: String
+    Default: ''
     Description: 'A list of identifiers of security groups within your Amazon VPC. The security groups should enable Amazon Kendra to connect to the data source.'
   SubnetIds:
     Type: String
+    Default: ''
     Description: 'A list of identifiers for subnets within your Amazon VPC. The subnets should be able to connect to each other in the VPC, and they should have outgoing access to the Internet through a NAT device.'
     
     
@@ -192,8 +194,9 @@ Resources:
                 Action: 
                   - kendra:BatchPutDocument
                   - kendra:BatchDeleteDocument
+                Effect: Allow
                 Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${KendraIndex}'
-            PolicyName: KendraIndexRDSDatasourcePolicy
+          PolicyName: KendraIndexRDSDatasourcePolicy
 
   KendraIndex:
     Condition: indexnotexists
@@ -213,7 +216,7 @@ Resources:
     Properties: 
       IndexId: !If
           - indexnotexists
-          - !GetAtt KendraIndex
+          - !Ref KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
@@ -235,7 +238,7 @@ Resources:
     Properties: 
       IndexId: !If
           - indexnotexists
-          - !GetAtt KendraIndex
+          - !Ref KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
@@ -266,11 +269,8 @@ Resources:
                 TableName: !Ref TableName
             DatabaseEngineType: !Ref DatabaseEngineType  
             VpcConfiguration: 
-                SecurityGroupIds: 
-                  - !Ref SecurityGroupIds
-                SubnetIds: 
-                  - !Ref SubnetIds
-
+                SecurityGroupIds: !Split [",", !Ref SecurityGroupIds]
+                SubnetIds: !Split [",", !Ref SubnetIds]
 Outputs:
   KendraIndexId:
     Value: !Ref KendraIndex
