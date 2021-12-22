@@ -12,3 +12,16 @@ tests:
       ExistingKendraIndex: '9e125c6b-1a24-4eed-8246-fe45299c7af9'
       ExistingKendraIndexRole: 'arn:aws:iam::468037112455:role/tCaT-kendra-default-342ed104906841-KendraIndexRole-1OSTGEZ2FV86Z'
       ExistingKendraS3DatasourceRole: 'arn:aws:iam::468037112455:role/tCaT-kendra-default-342ed10-KendraS3DatasourceRole-VUQAMND5NEZ6'
+      #Database required Parameters
+      # DatabaseEngineType:
+      # ExistingRDSDatasourceRole:
+      # ChangeDetectingColumns:
+      # DocumentDataColumnName:
+      # DocumentIdColumnName:
+      # SecretArn:
+      # DatabaseHost:
+      # DatabaseName:
+      # DatabasePort:
+      # TableName:
+      # SecurityGroupIds:
+      # SubnetIds:

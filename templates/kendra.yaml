@@ -23,6 +23,7 @@ Parameters:
     Type: String
     Default: ''
     Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
+  # RDS Datasource Parameters
   DatabaseEngineType:
     Type: String
     Description: "RDS_AURORA_MYSQL | RDS_AURORA_POSTGRESQL | RDS_MYSQL | RDS_POSTGRESQL"
@@ -31,8 +32,43 @@ Parameters:
       - 'RDS_AURORA_POSTGRESQL' 
       - 'RDS_MYSQL' 
       - 'RDS_POSTGRESQL'
-
-
+  ExistingRDSDatasourceRole:
+    Type: String
+    Default: ''
+    Description: "[Optional] Provide an IAM role Arn with permission to access the RDS database. If not provided, a new role will be created"
+  ChangeDetectingColumns:
+    Type: String
+    Default: 'id'
+    Description: 'One to Five Columns that indicate when a document in the database has changed. Default value is one column id'
+  DocumentDataColumnName:
+    Type: String
+    Description: "The column that contains the contents of the document"
+  DocumentIdColumnName:
+    Type: String
+    Description: "The column that provides the document unique identifier.This could be same as ChangeDetectingColumns"
+  SecretArn:
+    Type: String
+    Description: 'The Amazon Resource Name (ARN) of credentials stored in AWS Secrets Manager. The credentials should be a user/password pair.'
+  DatabaseHost:
+    Type: String
+    Description: 'The name of the host for the database. Can be either a string (host.subdomain.domain.tld) or an IPv4 or IPv6 address..'
+  DatabaseName:
+    Type: String
+    Description: 'The name of the database containing the document data.'
+  DatabasePort:
+    Type: String
+    Description: 'The port that the database uses for connections.'
+  TableName:
+    Type: String
+    Description: "The column that provides the documents unique identifier.This could be same as ChangeDetectingColumns"
+  SecurityGroupIds:
+    Type: String
+    Description: 'A list of identifiers of security groups within your Amazon VPC. The security groups should enable Amazon Kendra to connect to the data source.'
+  SubnetIds:
+    Type: String
+    Description: 'A list of identifiers for subnets within your Amazon VPC. The subnets should be able to connect to each other in the VPC, and they should have outgoing access to the Internet through a NAT device.'
+    
+    
 Conditions:
   indexnotexists: !Equals 
         - !Ref ExistingKendraIndex
@@ -47,11 +83,10 @@ Conditions:
   s3dsrolenotexists: !Equals 
         - !Ref ExistingKendraS3DatasourceRole
         - ''
-    
-#### Create Conditions s3 bucket/RDS
-#### Logic: If using existing role no need to create new one
-#### Condition: exixting IndexID condition
-    
+  rdsdsrolenotexists: !Equals 
+        - !Ref ExistingRDSDatasourceRole
+        - ''
+   
 Resources:
   KendraIndexRole:
     Type: 'AWS::IAM::Role'
@@ -96,9 +131,9 @@ Resources:
                   - 'logs:PutLogEvents'
           PolicyName: KendraIndexPolicy
   KendraS3DatasourceRole:
-    DependsOn: s3dsrolenotexists
+    DependsOn: KendraIndex
     Type: 'AWS::IAM::Role'
-    condition: ExistingKendraS3DatasourceRole
+    condition: s3dsrolenotexists
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -121,8 +156,46 @@ Resources:
                 - kendra:BatchPutDocument
                 - kendra:BatchDeleteDocument
                 Effect: Allow
-                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/{KendraIndex}'
+                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${KendraIndex}'
           PolicyName: KendraIndexS3DatasourcePolicy
+  
+  KendraRDSDatasourceRole:
+    DependsOn: KendraIndex
+    Type: 'AWS::IAM::Role'
+    condition: rdsdsrolenotexists
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: kendra.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies: 
+        PolicyDocument: 
+          Statement: 
+            - 
+              Action: 
+                - "secretsmanager:GetSecretValue"
+              Effect: Allow
+              Resource: "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+            - 
+              Action: 
+                - "ec2:CreateNetworkInterface"
+                - "ec2:DescribeNetworkInterfaces"
+                - "ec2:DeleteNetworkInterface"
+                - "ec2:CreateNetworkInterfacePermission"
+                - "ec2:DescribeSubnets"
+                - "kms:Decrypt"
+              Effect: Allow
+              Resource: "*"
+            - 
+              Action: 
+                - "kendra:BatchPutDocument"
+
+     
+
   KendraIndex:
     condition: indexnotexists
     Type: 'AWS::Kendra::Index'
@@ -132,22 +205,22 @@ Resources:
         - ''
         - - !Ref 'AWS::StackName'
           - '-Index'
-      RoleArn: !f
+      RoleArn: !If
         indexrolenotexists
           - !GetAtt KendraIndexRole.Arn
           - !Ref ExistingKendraIndexRole
   KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
-      IndexId: !f
-        indexrolenotexists
-          - !GetAtt KendraIndexRole.Arn
+      IndexId: !If
+        indexnotexists
+          - !GetAtt KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
         - - !Ref 'AWS::StackName'
           - '-S3Datasource'
-      RoleArn: !f
+      RoleArn: !If
         s3dsrolenotexists
           - !GetAtt KendraS3DatasourceRole.Arn
           - !Ref ExistingKendraS3DatasourceRole 
@@ -156,32 +229,48 @@ Resources:
       DataSourceConfiguration: 
         S3Configuration: 
           BucketName: !Ref DatasourceS3bucketName
+          
+          
   KendraDatasourceRDS:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
-      IndexId: !f
-        indexrolenotexists
-          - !GetAtt KendraIndexRole.Arn
+      IndexId: !If
+        indexnotexists
+          - !GetAtt KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
         - - !Ref 'AWS::StackName'
-          - '-S3Datasource'
-      RoleArn: !f
-        s3dsrolenotexists
-          - !GetAtt KendraS3DatasourceRole.Arn
-          - !Ref ExistingKendraS3DatasourceRole 
-      Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
+          - '-RDSDatasource'
+      RoleArn: !If
+        rdsdsrolenotexists
+          - !GetAtt KendraRDSDatasourceRole.Arn
+          - !Ref ExistingRDSDatasourceRole 
+      Type: DATABASE #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
       # Schedule: '0 * * * *'
       DataSourceConfiguration: 
         DatabaseConfiguration: 
             ColumnConfiguration: 
-              ColumnConfiguration
+                ChangeDetectingColumns: !Split [",", !Ref ChangeDetectingColumns] 
+                DocumentDataColumnName: !Ref DocumentDataColumnName
+                DocumentIdColumnName: !Ref DocumentIdColumnName
+                # FieldMappings: 
+                #   - DataSourceFieldName: String
+                #     IndexFieldName: String
+                #   - DataSourceFieldName: String
+                #     IndexFieldName: String
             ConnectionConfiguration: 
-              ConnectionConfiguration
+                DatabaseHost: !Ref DatabaseHost
+                DatabaseName: !Ref DatabaseName
+                DatabasePort: !Ref DatabasePort
+                SecretArn: !Ref SecretArn
+                TableName: !Ref TableName
             DatabaseEngineType: !Ref DatabaseEngineType  
             VpcConfiguration: 
-              DataSourceVpcConfiguration
+                SecurityGroupIds: 
+                  - !Ref SecurityGroupIds
+                SubnetIds: 
+                  - !Ref SubnetIds
 
 Outputs:
   KendraIndexId:
