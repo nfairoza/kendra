@@ -89,8 +89,8 @@ Conditions:
    
 Resources:
   KendraIndexRole:
+    Condition: indexrolenotexists
     Type: 'AWS::IAM::Role'
-    condition: indexrolenotexists
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -131,9 +131,8 @@ Resources:
                   - 'logs:PutLogEvents'
           PolicyName: KendraIndexPolicy
   KendraS3DatasourceRole:
-    DependsOn: KendraIndex
     Type: 'AWS::IAM::Role'
-    condition: s3dsrolenotexists
+    Condition: s3dsrolenotexists
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -160,9 +159,8 @@ Resources:
           PolicyName: KendraIndexS3DatasourcePolicy
   
   KendraRDSDatasourceRole:
-    DependsOn: KendraIndex
     Type: 'AWS::IAM::Role'
-    condition: rdsdsrolenotexists
+    Condition: rdsdsrolenotexists
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -173,31 +171,32 @@ Resources:
               Service: kendra.amazonaws.com
             Action: "sts:AssumeRole"
       Policies: 
-        PolicyDocument: 
-          Statement: 
-            - 
-              Action: 
-                - "secretsmanager:GetSecretValue"
-              Effect: Allow
-              Resource: "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
-            - 
-              Action: 
-                - "ec2:CreateNetworkInterface"
-                - "ec2:DescribeNetworkInterfaces"
-                - "ec2:DeleteNetworkInterface"
-                - "ec2:CreateNetworkInterfacePermission"
-                - "ec2:DescribeSubnets"
-                - "kms:Decrypt"
-              Effect: Allow
-              Resource: "*"
-            - 
-              Action: 
-                - "kendra:BatchPutDocument"
-
-     
+        - PolicyDocument: 
+            Statement: 
+              - 
+                Action: 
+                  - "secretsmanager:GetSecretValue"
+                Effect: Allow
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+              - 
+                Action: 
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:DescribeNetworkInterfaces"
+                  - "ec2:DeleteNetworkInterface"
+                  - "ec2:CreateNetworkInterfacePermission"
+                  - "ec2:DescribeSubnets"
+                  - "kms:Decrypt"
+                Effect: Allow
+                Resource: "*"
+              - 
+                Action: 
+                  - kendra:BatchPutDocument
+                  - kendra:BatchDeleteDocument
+                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${KendraIndex}'
+            PolicyName: KendraIndexRDSDatasourcePolicy
 
   KendraIndex:
-    condition: indexnotexists
+    Condition: indexnotexists
     Type: 'AWS::Kendra::Index'
     Properties:
       Edition: !Ref KendraEdition
@@ -206,14 +205,14 @@ Resources:
         - - !Ref 'AWS::StackName'
           - '-Index'
       RoleArn: !If
-        indexrolenotexists
+          - indexrolenotexists
           - !GetAtt KendraIndexRole.Arn
           - !Ref ExistingKendraIndexRole
   KendraDatasourceS3:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
       IndexId: !If
-        indexnotexists
+          - indexnotexists
           - !GetAtt KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
@@ -221,7 +220,7 @@ Resources:
         - - !Ref 'AWS::StackName'
           - '-S3Datasource'
       RoleArn: !If
-        s3dsrolenotexists
+          - s3dsrolenotexists
           - !GetAtt KendraS3DatasourceRole.Arn
           - !Ref ExistingKendraS3DatasourceRole 
       Type: S3 #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
@@ -235,7 +234,7 @@ Resources:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
       IndexId: !If
-        indexnotexists
+          - indexnotexists
           - !GetAtt KendraIndex
           - !Ref ExistingKendraIndex
       Name: !Join
@@ -243,7 +242,7 @@ Resources:
         - - !Ref 'AWS::StackName'
           - '-RDSDatasource'
       RoleArn: !If
-        rdsdsrolenotexists
+          - rdsdsrolenotexists
           - !GetAtt KendraRDSDatasourceRole.Arn
           - !Ref ExistingRDSDatasourceRole 
       Type: DATABASE #CONFLUENCE | CUSTOM | DATABASE | GOOGLEDRIVE | ONEDRIVE | S3 | SALESFORCE | SERVICENOW | SHAREPOINT | WEBCRAWLER | WORKDOCS
