@@ -344,16 +344,28 @@ Resources:
   
 Outputs:
   KendraIndexId:
-    Value: !GetAtt KendraIndex.Id
+    Value: !If
+          - indexnotexists
+          - !GetAtt KendraIndex.Id
+          - !Ref ExistingKendraIndex
   KendraDatasourceS3:
     Value: !GetAtt KendraDatasourceS3.Arn
   KendraDatasourceRDS:
+    Condition: userdsds
     Value: !GetAtt KendraDatasourceRDS.Arn
   KendraIndexRole:
-    Value: !GetAtt KendraIndexRole.Arn
+    Value: !If
+          - indexrolenotexists
+          - !GetAtt KendraIndexRole.Arn
+          - !Ref ExistingKendraIndexRole 
   KendraS3DatasourceRole:
-    Value: !GetAtt KendraS3DatasourceRole.Arn
+    Value: !If
+          - s3dsrolenotexists
+          - !GetAtt KendraS3DatasourceRole.Arn
+          - !Ref ExistingKendraS3DatasourceRole 
   KendraRDSDatasourceRole:
+    Condition: createrdsrole
     Value: !GetAtt KendraRDSDatasourceRole.Arn
+    
   
   
