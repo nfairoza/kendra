@@ -113,7 +113,6 @@ Metadata:
           - SecurityGroupIds
           - SubnetIds
     ParameterLabels:
-      ParameterLogicalID: 'Label'
       ExistingKendraIndex: 'Kendra Index ID'
       KendraEdition: 'Kendra Edition'
       ExistingKendraIndexRole: 'Kendra Execution Role ARN'
@@ -131,7 +130,7 @@ Metadata:
       DatabasePort: 'Database Port'
       TableName: 'Table Name'
       SecurityGroupIds: 'Security-Group Id(s)'
-      SubnetIds: 'Subnet Id(s)''
+      SubnetIds: 'Subnet Id(s)'
       
       
 Conditions:
