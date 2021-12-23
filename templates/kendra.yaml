@@ -25,11 +25,11 @@ Parameters:
     Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
   RequireRDSDS:
     Type: String
-    Default: 'Do you need to use RDS as a Datasource? Allowed values: TRUE or FALSE'
+    Default: 'FALSE'
     AllowedValues:
-      - TRUE
-      - FALSE
-    Description: 
+      - 'TRUE'
+      - 'FALSE'
+    Description: 'Do you need to use RDS as a Datasource? Allowed values: TRUE or FALSE'
   DatabaseEngineType:
     Type: String
     Description: "RDS_AURORA_MYSQL | RDS_AURORA_POSTGRESQL | RDS_MYSQL | RDS_POSTGRESQL"
@@ -150,9 +150,6 @@ Rules:
             - !Ref TableName
             - ''
         AssertDescription: 'TableName is mandatory when RDS is added as a datasource'
-    
- 
-
 
 Resources:
   KendraIndexRole:
@@ -343,6 +340,7 @@ Resources:
             VpcConfiguration: 
                 SecurityGroupIds: !Split [",", !Ref SecurityGroupIds]
                 SubnetIds: !Split [",", !Ref SubnetIds]
+  
                 
 Outputs:
   KendraIndexId:
