@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+Region: us-west-2
+StackName: tCaT-kendra-default-e1f79e5595e948528253a4abcf2a35ba
+*****************************************************************************
+ResourceStatusReason:  
+Stack launch was successful
+*****************************************************************************
+*****************************************************************************
+Events:  
+TimeStamp                         ResourceStatus      ResourceType                LogicalResourceId                                     ResourceStatusReason
+--------------------------------  ------------------  --------------------------  ----------------------------------------------------  ---------------------------
+2021-12-23 15:26:17.044000+00:00  CREATE_COMPLETE     AWS::CloudFormation::Stack  tCaT-kendra-default-e1f79e5595e948528253a4abcf2a35ba
+2021-12-23 15:26:15.342000+00:00  CREATE_COMPLETE     AWS::Kendra::DataSource     KendraDatasourceRDS
+2021-12-23 15:26:05.674000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceRDS                                   Resource creation Initiated
+2021-12-23 15:26:01.064000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceRDS
+2021-12-23 15:25:58.583000+00:00  CREATE_COMPLETE     AWS::IAM::Role              KendraRDSDatasourceRole
+2021-12-23 15:25:57.290000+00:00  CREATE_COMPLETE     AWS::Kendra::DataSource     KendraDatasourceS3
+2021-12-23 15:25:47.900000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceS3                                    Resource creation Initiated
+2021-12-23 15:25:43.473000+00:00  CREATE_IN_PROGRESS  AWS::IAM::Role              KendraRDSDatasourceRole                               Resource creation Initiated
+2021-12-23 15:25:43.001000+00:00  CREATE_IN_PROGRESS  AWS::IAM::Role              KendraRDSDatasourceRole
+2021-12-23 15:25:42.848000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceS3
+2021-12-23 15:25:38.252000+00:00  CREATE_IN_PROGRESS  AWS::CloudFormation::Stack  tCaT-kendra-default-e1f79e5595e948528253a4abcf2a35ba  User Initiated
+*****************************************************************************
+-----------------------------------------------------------------------------
+Tested on: Thursday, 23. December 2021 03:26PM
+-----------------------------------------------------------------------------
+

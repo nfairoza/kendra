@@ -23,7 +23,6 @@ Parameters:
     Type: String
     Default: ''
     Description: '[Optional] Provide an IAM role Arn with permission to access the s3 data source. If not provided, a new role will be created.'
-  # RDS Datasource Parameters
   DatabaseEngineType:
     Type: String
     Description: "RDS_AURORA_MYSQL | RDS_AURORA_POSTGRESQL | RDS_MYSQL | RDS_POSTGRESQL"
@@ -69,15 +68,9 @@ Parameters:
     Type: String
     Default: ''
     Description: 'A list of identifiers for subnets within your Amazon VPC. The subnets should be able to connect to each other in the VPC, and they should have outgoing access to the Internet through a NAT device.'
-    
-    
 Conditions:
   indexnotexists: !Equals 
         - !Ref ExistingKendraIndex
-        - ''
-  s3bucketexists: !Not 
-      - !Equals 
-        - !Ref DatasourceS3bucketName
         - ''
   indexrolenotexists: !Equals 
         - !Ref ExistingKendraIndexRole
@@ -88,7 +81,6 @@ Conditions:
   rdsdsrolenotexists: !Equals 
         - !Ref ExistingRDSDatasourceRole
         - ''
-   
 Resources:
   KendraIndexRole:
     Condition: indexrolenotexists
@@ -157,9 +149,14 @@ Resources:
                 - kendra:BatchPutDocument
                 - kendra:BatchDeleteDocument
                 Effect: Allow
-                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${KendraIndex}'
+                Resource: !Sub 
+                  - 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${kendraindexid}'
+                  - kendraindexid: !If
+                    - indexnotexists
+                    - !GetAtt KendraIndex.Id
+                    - !Ref ExistingKendraIndex
+
           PolicyName: KendraIndexS3DatasourcePolicy
-  
   KendraRDSDatasourceRole:
     Type: 'AWS::IAM::Role'
     Condition: rdsdsrolenotexists
@@ -195,9 +192,13 @@ Resources:
                   - kendra:BatchPutDocument
                   - kendra:BatchDeleteDocument
                 Effect: Allow
-                Resource: !Sub 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${KendraIndex}'
+                Resource: !Sub 
+                  - 'arn:aws:kendra:${AWS::Region}:${AWS::AccountId}:index/${kendraindexid}'
+                  - kendraindexid: !If
+                    - indexnotexists
+                    - !GetAtt KendraIndex.Id
+                    - !Ref ExistingKendraIndex
           PolicyName: KendraIndexRDSDatasourcePolicy
-
   KendraIndex:
     Condition: indexnotexists
     Type: 'AWS::Kendra::Index'
@@ -216,7 +217,7 @@ Resources:
     Properties: 
       IndexId: !If
           - indexnotexists
-          - !Ref KendraIndex
+          - !GetAtt KendraIndex.Id
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
@@ -231,14 +232,12 @@ Resources:
       DataSourceConfiguration: 
         S3Configuration: 
           BucketName: !Ref DatasourceS3bucketName
-          
-          
   KendraDatasourceRDS:
     Type: 'AWS::Kendra::DataSource'
     Properties: 
       IndexId: !If
           - indexnotexists
-          - !Ref KendraIndex
+          - !GetAtt KendraIndex.Id
           - !Ref ExistingKendraIndex
       Name: !Join
         - ''
@@ -273,12 +272,16 @@ Resources:
                 SubnetIds: !Split [",", !Ref SubnetIds]
 Outputs:
   KendraIndexId:
-    Value: !Ref KendraIndex
+    Value: !GetAtt KendraIndex.Id
   KendraDatasourceS3:
     Value: !GetAtt KendraDatasourceS3.Arn
+  KendraDatasourceRDS:
+    Value: !GetAtt KendraDatasourceRDS.Arn
   KendraIndexRole:
-     Value: !GetAtt KendraIndexRole.Arn
+    Value: !GetAtt KendraIndexRole.Arn
   KendraS3DatasourceRole:
-   Value: !GetAtt KendraS3DatasourceRole.Arn
-  # S3Bucket
+    Value: !GetAtt KendraS3DatasourceRole.Arn
+  KendraRDSDatasourceRole:
+    Value: !GetAtt KendraRDSDatasourceRole.Arn
+  
   
