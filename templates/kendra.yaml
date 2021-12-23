@@ -39,6 +39,7 @@ Parameters:
       - 'RDS_AURORA_POSTGRESQL' 
       - 'RDS_MYSQL' 
       - 'RDS_POSTGRESQL'
+      - ''
   ExistingRDSDatasourceRole:
     Type: String
     Default: ''
@@ -302,7 +303,7 @@ Resources:
         S3Configuration: 
           BucketName: !Ref DatasourceS3bucketName
   KendraDatasourceRDS:
-    condition: userdsds
+    Condition: userdsds
     Type: 'AWS::Kendra::DataSource'
     Properties: 
       IndexId: !If
@@ -341,7 +342,6 @@ Resources:
                 SecurityGroupIds: !Split [",", !Ref SecurityGroupIds]
                 SubnetIds: !Split [",", !Ref SubnetIds]
   
-                
 Outputs:
   KendraIndexId:
     Value: !GetAtt KendraIndex.Id
