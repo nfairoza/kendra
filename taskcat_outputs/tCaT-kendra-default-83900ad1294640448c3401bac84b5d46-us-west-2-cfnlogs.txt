@@ -1,0 +1,18 @@
+-----------------------------------------------------------------------------
+Region: us-west-2
+StackName: tCaT-kendra-default-83900ad1294640448c3401bac84b5d46
+*****************************************************************************
+ResourceStatusReason:  
+Template error: every Fn::Equals object requires a list of 2 string parameters.
+*****************************************************************************
+*****************************************************************************
+Events:  
+TimeStamp                         ResourceStatus      ResourceType                LogicalResourceId                                     ResourceStatusReason
+--------------------------------  ------------------  --------------------------  ----------------------------------------------------  -------------------------------------------------------------------------------
+2021-12-23 17:46:45.205000+00:00  CREATE_FAILED       AWS::CloudFormation::Stack  tCaT-kendra-default-83900ad1294640448c3401bac84b5d46  Template error: every Fn::Equals object requires a list of 2 string parameters.
+2021-12-23 17:46:42.188000+00:00  CREATE_IN_PROGRESS  AWS::CloudFormation::Stack  tCaT-kendra-default-83900ad1294640448c3401bac84b5d46  User Initiated
+*****************************************************************************
+-----------------------------------------------------------------------------
+Tested on: Thursday, 23. December 2021 05:47PM
+-----------------------------------------------------------------------------
+

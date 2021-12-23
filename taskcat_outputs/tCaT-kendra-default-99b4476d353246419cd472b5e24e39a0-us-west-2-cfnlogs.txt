@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+Region: us-west-2
+StackName: tCaT-kendra-default-99b4476d353246419cd472b5e24e39a0
+*****************************************************************************
+ResourceStatusReason:  
+Stack launch was successful
+*****************************************************************************
+*****************************************************************************
+Events:  
+TimeStamp                         ResourceStatus      ResourceType                LogicalResourceId                                     ResourceStatusReason
+--------------------------------  ------------------  --------------------------  ----------------------------------------------------  ---------------------------
+2021-12-23 19:48:38.007000+00:00  CREATE_COMPLETE     AWS::CloudFormation::Stack  tCaT-kendra-default-99b4476d353246419cd472b5e24e39a0
+2021-12-23 19:48:32.769000+00:00  CREATE_COMPLETE     AWS::Kendra::DataSource     KendraDatasourceS3
+2021-12-23 19:48:23.618000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceS3                                    Resource creation Initiated
+2021-12-23 19:48:19.219000+00:00  CREATE_IN_PROGRESS  AWS::Kendra::DataSource     KendraDatasourceS3
+2021-12-23 19:48:12.788000+00:00  CREATE_IN_PROGRESS  AWS::CloudFormation::Stack  tCaT-kendra-default-99b4476d353246419cd472b5e24e39a0  User Initiated
+*****************************************************************************
+-----------------------------------------------------------------------------
+Tested on: Thursday, 23. December 2021 07:49PM
+-----------------------------------------------------------------------------
+

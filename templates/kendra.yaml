@@ -100,7 +100,7 @@ Conditions:
         - ''
   userdsds: !Equals
         - !Ref RequireRDSDS
-        - TRUE
+        - 'TRUE'
   createrdsrole: !And
         - !Condition userdsds
         - !Condition rdsdsrolenotexists
@@ -109,7 +109,7 @@ Rules:
   CheckRDSParameteres:
     RuleCondition: !Equals 
       - !Ref RequireRDSDS
-      - TRUE
+      - 'TRUE'
     Assertions:
       - Assert: !Not 
           - !Equals 
