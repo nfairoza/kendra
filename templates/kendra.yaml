@@ -1,4 +1,4 @@
-  
+### Author: nfairoza@amazon.com
 Parameters:
   KendraEdition:
     Type: String
