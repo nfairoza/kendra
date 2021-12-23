@@ -10,7 +10,7 @@ Parameters:
   DatasourceS3bucketName:
     Type: String
     Default: ''
-    Description: 'S3 bucket to use as datasource'
+    Description: 'Name of the S3 bucket to use as datasource'
   ExistingKendraIndex:
     Type: String
     Default: ''
@@ -85,6 +85,55 @@ Parameters:
     Default: ''
     Description: 'A list of identifiers for subnets within your Amazon VPC. The subnets should be able to connect to each other in the VPC, and they should have outgoing access to the Internet through a NAT device.'
     
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: 'Kendra Index Configuration'
+        Parameters:
+          - ExistingKendraIndex
+          - KendraEdition
+          - ExistingKendraIndexRole
+      - Label: 'Kendra S3 DataSource Configuration'
+        Parameters:
+          - DatasourceS3bucketName
+          - ExistingKendraS3DatasourceRole
+      - Label: 'Kendra RDS DataSource Configuration'
+        Parameters:
+          - RequireRDSDS
+          - DatabaseEngineType
+          - ExistingRDSDatasourceRole
+          - ChangeDetectingColumns
+          - DocumentDataColumnName
+          - DocumentIdColumnName
+          - SecretArn
+          - DatabaseHost
+          - DatabaseName
+          - DatabasePort
+          - TableName
+          - SecurityGroupIds
+          - SubnetIds
+    ParameterLabels:
+      ParameterLogicalID: 'Label'
+      ExistingKendraIndex: 'Kendra Index ID'
+      KendraEdition: 'Kendra Edition'
+      ExistingKendraIndexRole: 'Kendra Execution Role ARN'
+      DatasourceS3bucketName: 'S3 Bucket Name'
+      ExistingKendraS3DatasourceRole: 'S3 Datasource Role ARN'
+      RequireRDSDS: 'Add RDS Datasource'
+      DatabaseEngineType: 'RDS Engine Type'
+      ExistingRDSDatasourceRole: 'RDS Datasource role ARN'
+      ChangeDetectingColumns: 'Change Dececting ColumnName List'
+      DocumentDataColumnName: 'Document Data ColumnName'
+      DocumentIdColumnName: 'Document Id ColumnName'
+      SecretArn: 'Secrets Manager Secret Arn'
+      DatabaseHost: 'Database Host'
+      DatabaseName: 'Database Name'
+      DatabasePort: 'Database Port'
+      TableName: 'Table Name'
+      SecurityGroupIds: 'Security-Group Id(s)'
+      SubnetIds: 'Subnet Id(s)''
+      
+      
 Conditions:
   indexnotexists: !Equals 
         - !Ref ExistingKendraIndex
